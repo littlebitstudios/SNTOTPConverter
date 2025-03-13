@@ -15,6 +15,6 @@ setup(
     license='MIT',
     license_files='LICENSE',
     packages=find_packages(),
-    entry_points={'console_scripts':['stdnotes-totp-converter:stdnotes-totp-converter:main']},
+    entry_points={'console_scripts':['sntotpconverter:SNTOTPConverter:main']},
     classifiers = ['License :: OSI Approved :: MIT License', 'Operating System :: OS Independent']
 )
