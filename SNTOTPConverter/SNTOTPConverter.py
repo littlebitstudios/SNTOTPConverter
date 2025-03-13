@@ -71,7 +71,13 @@ def main():
                     if totp_object:
                         totp_object_list.append(totp_object)
 
-            output_file_path = input("Enter the file path to save the JSON output: ")
+            output_file_path = ""
+            if len(sys.argv) > 3:
+                output_file_path = sys.argv[3]
+            else:
+                output_file_path = input("Enter the file path to save the JSON output: ")
+                if not "." in output_file_path:
+                    output_file_path = output_file_path+".json"
 
             with open(os.path.expanduser(output_file_path), 'w') as output_file:
                 json.dump(totp_object_list, output_file, indent=4)
@@ -79,15 +85,26 @@ def main():
             print(f"Your TOTP URI list was converted to JSON, saved to {output_file_path}")
             print("To save the codes to Standard Notes, make a new note, set the note to Plain Text, paste the contexts of the output file into SN, then change the note type to Authenticator.")
     elif user_choice == "e":
-        user_file_path = input("Enter the file path of a text file containing the JSON data from SN: ")
+        
+        user_file_path = ""
+        if len(sys.argv) > 2:
+            user_file_path = sys.argv[2]
+        else:
+            user_file_path = input("Enter the file path of a text file containing a list of TOTP URIs: ")
 
         with open(os.path.expanduser(user_file_path)) as f:
             totp_object_list = json.loads(f)
             totp_uri_list = []
             for totp_object in totp_object_list:
                 totp_uri_list.append(object_to_uri(totp_object))
-                
-            output_file_path = input("Enter the file path to save the text output: ")
+            
+            output_file_path = ""
+            if len(sys.argv) > 3:
+                output_file_path = sys.argv[3]
+            else:
+                output_file_path = input("Enter the file path to save the text output: ")
+                if not "." in output_file_path:
+                    output_file_path = output_file_path+".txt"
             
             with open(os.path.expanduser(output_file_path), 'w') as output_file:
                 for uri in totp_uri_list:
