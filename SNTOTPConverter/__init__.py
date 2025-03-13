@@ -1,0 +1,1 @@
+from .SNTOTPConverter import main
