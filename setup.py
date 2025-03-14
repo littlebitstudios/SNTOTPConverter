@@ -13,8 +13,11 @@ setup(
     author='LittleBit',
     author_email='littlebit@littlebitstudios.com',
     license='MIT',
-    license_files='LICENSE',
+    license_files=['LICENSE'],
     packages=find_packages(),
-    entry_points={'console_scripts':['sntotpconverter:SNTOTPConverter:main']},
-    classifiers = ['License :: OSI Approved :: MIT License', 'Operating System :: OS Independent']
+    entry_points={'console_scripts': ['sntotpconverter=SNTOTPConverter:main']},
+    classifiers = [
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent'
+    ]
 )
