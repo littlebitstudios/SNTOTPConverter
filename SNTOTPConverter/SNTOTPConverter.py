@@ -22,7 +22,11 @@ def uri_to_object(uri:str):
             totp_object["service"] = service_account[0]
             totp_object["account"] = service_account[1]
         elif "issuer" in params:
-            totp_object["service"] = params["issuer"]
+            if isinstance(params["issuer"], list):
+                totp_object["service"] = params["issuer"][0]
+            else:
+                totp_object["service"] = params["issuer"]
+                
             totp_object["account"] = input("Enter an email or username for your "+totp_object["service"]+" account: ")
         else:
             totp_object["service"] = parsed_url.path if parsed_url.path else "[Unknown Service]"
@@ -47,18 +51,21 @@ def main():
     
     user_choice = ""
     if len(sys.argv) > 1:
-        if sys.argv[1].lower == "import":
+        if sys.argv[1].lower() == "import":
             user_choice = "i"
-        elif sys.argv[1].lower == "export":
+            print("Continuing with argument (import)")
+        elif sys.argv[1].lower() == "export":
             user_choice = "e"
+            print("Continuing with argument (export)")
     else:
         user_choice = input("Are you (i)mporting to or (e)xporting from Standard Notes?")
 
-    if user_choice.lower == "i":
+    if user_choice.lower() == "i":
         
         user_file_path = ""
         if len(sys.argv) > 2:
             user_file_path = sys.argv[2]
+            print(f"Continuing with argument (input file path: {sys.argv[2]})")
         else:
             user_file_path = input("Enter the file path of a text file containing a list of TOTP URIs: ")
 
@@ -74,6 +81,7 @@ def main():
             output_file_path = ""
             if len(sys.argv) > 3:
                 output_file_path = sys.argv[3]
+                print(f"Continuing with argument (output file path: {sys.argv[3]})")
             else:
                 output_file_path = input("Enter the file path to save the JSON output: ")
                 if not "." in output_file_path:
@@ -84,11 +92,12 @@ def main():
 
             print(f"Your TOTP URI list was converted to JSON, saved to {output_file_path}")
             print("To save the codes to Standard Notes, make a new note, set the note to Plain Text, paste the contexts of the output file into SN, then change the note type to Authenticator.")
-    elif user_choice == "e":
+    elif user_choice.lower() == "e":
         
         user_file_path = ""
         if len(sys.argv) > 2:
             user_file_path = sys.argv[2]
+            print(f"Continuing with argument (input file path: {sys.argv[2]})")
         else:
             user_file_path = input("Enter the file path of a text file containing a list of TOTP URIs: ")
 
@@ -101,6 +110,7 @@ def main():
             output_file_path = ""
             if len(sys.argv) > 3:
                 output_file_path = sys.argv[3]
+                print(f"Continuing with argument (output file path: {sys.argv[3]})")
             else:
                 output_file_path = input("Enter the file path to save the text output: ")
                 if not "." in output_file_path:
