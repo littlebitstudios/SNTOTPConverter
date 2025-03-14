@@ -102,7 +102,7 @@ def main():
             user_file_path = input("Enter the file path of a text file containing a list of TOTP URIs: ")
 
         with open(os.path.expanduser(user_file_path)) as f:
-            totp_object_list = json.loads(f)
+            totp_object_list = json.load(f)
             totp_uri_list = []
             for totp_object in totp_object_list:
                 totp_uri_list.append(object_to_uri(totp_object))
