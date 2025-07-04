@@ -6,7 +6,7 @@ import sys
 def uri_to_object(uri:str):
     uri_converted = urlparse(uri)._replace(path=urlparse(uri).path.replace('%20', ' ').replace('%3A', ':').replace('%40', '@')).geturl()
     
-    if uri_converted.startswith("otpauth://"):
+    if uri_converted.startswith("otpauth://totp"):
         parsed_url = urlparse(uri_converted)
         params = parse_qs(parsed_url.query)
         
@@ -33,6 +33,8 @@ def uri_to_object(uri:str):
             totp_object["account"] = input("Enter an email or username for your "+totp_object["service"]+" account: ")
             
         return totp_object
+    elif uri_converted.startswith("otpauth://"):
+        print("This is a OTP URI, but it may be using an unsupported protocol, such as HOTP.")
     else:
         print("Invalid TOTP URI.")
         
