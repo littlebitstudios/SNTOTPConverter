@@ -6,7 +6,7 @@ long_description = (here/'README.md').read_text(encoding='utf-8')
 
 setup(
     name='SNTOTPConverter',
-    version='1.0.1',
+    version='1.1.0',
     description='Script for importing/exporting TOTP 2-factor authentication codes for Standard Notes.',
     long_description=long_description,
     long_description_content_type='text/markdown',
