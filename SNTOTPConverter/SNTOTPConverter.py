@@ -2,6 +2,7 @@ from urllib.parse import urlparse, parse_qs
 import json
 import os
 import sys
+import csv
 
 def uri_to_object(uri:str):
     uri_converted = urlparse(uri)._replace(path=urlparse(uri).path.replace('%20', ' ').replace('%3A', ':').replace('%40', '@')).geturl()
@@ -47,6 +48,15 @@ def object_to_uri(totp_object:dict):
         return uri
     else:
         print("Invalid TOTP object. Missing required keys.")
+        
+def secret_from_uri(uri: str):
+    if not uri:
+        return ""
+    parsed_url = urlparse(uri)
+    if not parsed_url.scheme == "otpauth" or not parsed_url.netloc == "totp":
+        return ""
+    params = parse_qs(parsed_url.query)
+    return params.get('secret', [''])[0]
 
 def main():
     print("Standard Notes TOTP Converter by LittleBit")
@@ -63,20 +73,21 @@ def main():
         user_choice = input("Are you (i)mporting to or (e)xporting from Standard Notes?")
 
     if user_choice.lower() == "i":
-        
         user_file_path = ""
         if len(sys.argv) > 2:
             user_file_path = sys.argv[2]
             print(f"Continuing with argument (input file path: {sys.argv[2]})")
         else:
-            user_file_path = input("Enter the file path of a text file containing a list of TOTP URIs: ")
+            user_file_path = input("Enter the file path of a text or CSV file containing a list of TOTP URIs: ")
 
-        with open(os.path.expanduser(user_file_path)) as f:
-            totp_object_list = []
-            for line in f:
-                line = line.strip()
-                if line:
-                    totp_object = uri_to_object(line)
+        # Only run this if the file is a .txt
+        if user_file_path.lower().endswith('.txt'):
+            with open(os.path.expanduser(user_file_path)) as f:
+                totp_object_list = []
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        totp_object = uri_to_object(line)
                     if totp_object:
                         totp_object_list.append(totp_object)
 
@@ -86,14 +97,63 @@ def main():
                 print(f"Continuing with argument (output file path: {sys.argv[3]})")
             else:
                 output_file_path = input("Enter the file path to save the JSON output: ")
-                if not "." in output_file_path:
-                    output_file_path = output_file_path+".json"
+            
+            if not "." in output_file_path:
+                output_file_path = output_file_path+".json"
 
             with open(os.path.expanduser(output_file_path), 'w') as output_file:
                 json.dump(totp_object_list, output_file, indent=4)
 
-            print(f"Your TOTP URI list was converted to JSON, saved to {output_file_path}")
-            print("To save the codes to Standard Notes, make a new note, set the note to Plain Text, paste the contexts of the output file into SN, then change the note type to Authenticator.")
+            print(f"Your TOTP URI list was converted to SN TOTP JSON, saved to {output_file_path}")
+            print("To save the codes to Standard Notes, make a new note, set the note to Plain Text, paste the contents of the output file into SN, then change the note type to Authenticator.")
+        # CSV file handling
+        elif user_file_path.lower().endswith('.csv'):
+            required_fields = {"Title", "Username", "Password", "Notes", "OTPAuth"}
+            with open(user_file_path, newline='') as input_file:
+                reader = csv.DictReader(input_file)
+                if not reader.fieldnames or not required_fields.issubset(reader.fieldnames):
+                    print(f"CSV file must contain the following columns: {', '.join(required_fields)}")
+                    return
+                passwords_mode = False
+                if input("CSV file detected. Do you want to include passwords? (y/n) ").lower() == "y":
+                    passwords_mode = True
+                totp_object_list = []
+                seen = set()
+                for row in reader:
+                    if not row['OTPAuth']:
+                        continue
+                    key = (row['Title'], row['Username'], secret_from_uri(row['OTPAuth']))
+                    if key in seen:
+                        print(f"Skipping duplicate: Service='{row['Title']}', Account='{row['Username']}'")
+                        continue
+                    seen.add(key)
+                    totp_object = {
+                        'service': row['Title'],
+                        'account': row['Username'],
+                        'secret': secret_from_uri(row['OTPAuth']),
+                        'notes': row['Notes']
+                    }
+                    if passwords_mode:
+                        totp_object['password'] = row['Password']
+                    totp_object_list.append(totp_object)
+
+            output_file_path = ""
+            if len(sys.argv) > 3:
+                output_file_path = sys.argv[3]
+                print(f"Continuing with argument (output file path: {sys.argv[3]})")
+            else:
+                output_file_path = input("Enter the file path to save the JSON output: ")
+                
+            if not "." in output_file_path:
+                output_file_path = output_file_path + ".json"
+
+            with open(os.path.expanduser(output_file_path), 'w') as output_file:
+                json.dump(totp_object_list, output_file, indent=4)
+
+            print(f"Your Passwords CSV was converted to SN TOTP JSON, saved to {output_file_path}")
+            print("To save the codes to Standard Notes, make a new note, set the note to Plain Text, paste the contents of the output file into SN, then change the note type to Authenticator.")
+        else:
+            print("Only .txt and .csv files are supported for import.")
     elif user_choice.lower() == "e":
         
         user_file_path = ""
@@ -122,7 +182,7 @@ def main():
                 for uri in totp_uri_list:
                     output_file.write(uri + '\n')
 
-            print(f"TOTP URIs exported from JSON and saved to {output_file_path}")
+            print(f"TOTP URIs exported from SN TOTP JSON and saved to {output_file_path}")
             print("You may import them using authenticator apps that support importing from URI lists")
             
 if __name__ == "__main__":
